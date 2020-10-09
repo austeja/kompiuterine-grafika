@@ -9,12 +9,6 @@ function sleep(ms) {
       });
 }
 
-function drawFractal() {
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    draw(ctx, stepCount);
-}
-
 async function animateF1() {
     var canvas2 = document.getElementById('canvas2');
     var ctx2 = canvas2.getContext('2d');
@@ -107,6 +101,12 @@ async function animateF4() {
 
         coordinateStart = coordinateStart + 12.5;
     }
+}
+
+function drawFractal() {
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    draw(ctx, stepCount);
 }
 
 function draw(ctx, currentStep) {
