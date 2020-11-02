@@ -62,8 +62,11 @@ $(function() {
 
     var verticalSupportRadius = 0.6;
 
+    var targetpointz = 4 + 5; 
+    var targetpointx = 2.5 + 0.6;
+
     // stack of boxes
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < 2; i++) {
         var boxGeometry = new THREE.BoxGeometry(stepDepth,stepHeight,stepWidth);
         var boxMaterial = new THREE.MeshLambertMaterial({color: 0xff0000});
         box = new THREE.Mesh(boxGeometry, boxMaterial);
@@ -90,11 +93,19 @@ $(function() {
         verticalStepSupport.position.y = supportDepth;
         verticalStepSupport.position.z = boundingBoxWidth - stepWidth / 2;
 
+        // //todo:: add rails!!!
+        // var points = [];
+        // points.push(new THREE.Vector3(0, 1, 1));	
+        // points.push(new THREE.Vector3(0, 1, 2));	
+        // var railGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(points), 10, 0.4, 10, false);
+        // var rails = THREE.SceneUtils.createMultiMaterialObject(railGeometry, [stepSupportMaterial]);
+
         step = new THREE.Object3D();
         step.add(box);
         step.add(frame);
         step.add(horizontalStepSupport);
         step.add(verticalStepSupport);
+        // step.add(rails);
 
         step.position.x = currentXCoordinate;
         step.position.z = currentZCoordinate;
@@ -103,18 +114,25 @@ $(function() {
 
         scene.add(step);
 
-        currentXCoordinate = currentXCoordinate -2.5 * Math.cos(-(degreesToRadians(stairRotationInDegrees)) * i);
-        currentZCoordinate = currentZCoordinate -2.5 * Math.sin(-(degreesToRadians(stairRotationInDegrees)) * i);
+       
+        var z = 4 + 5;
+        var x = -2.5 + 0.6;
+        var zafter = x * Math.sin(degreesToRadians(-stairRotationInDegrees * (i + 1))) + z * Math.cos(degreesToRadians(-stairRotationInDegrees * (i + 1)))
+        var xafter = x * Math.cos(degreesToRadians(-stairRotationInDegrees * (i + 1))) - z * Math.sin(degreesToRadians(-stairRotationInDegrees * (i + 1)));
 
-        console.error('x', currentXCoordinate)
-        console.error('z',currentZCoordinate)
+        targetpointz = 4 + 5; 
+        targetpointx = 2.5 + 0.6;
+        var distance = Math.sqrt(Math.pow(zafter - targetpointz, 2) + Math.pow(xafter - targetpointx, 2));
 
+
+        var deltax = distance * Math.sin(degreesToRadians(stairRotationInDegrees));
+        var deltaz = distance * Math.cos(degreesToRadians(stairRotationInDegrees));
+
+        console.error(distance);
 
         
-        
-    
-
-      
+        currentXCoordinate = currentXCoordinate - deltax;
+        currentZCoordinate = currentZCoordinate + deltaz - 0.5;
     }
   
     // position and point the camera to the center of the scene
