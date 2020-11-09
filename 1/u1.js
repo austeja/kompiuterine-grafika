@@ -69,9 +69,10 @@ async function animateF3() {
         ctx2.clearRect(0, 0, canvasEdgeSize, canvasEdgeSize);
         ctx2.save();
 
-        var vector = 1 - 1.5 * i;
-
-        ctx2.transform(vector, 0, 0, vector, xCoordinateStart, yCoordinateStart); 
+        var vector = 1 - 0.5 * i;
+        var alpha = Math.PI * i;
+        
+        ctx2.transform(vector * Math.cos(alpha), vector * Math.sin(alpha), vector * (-Math.sin(alpha)), vector * Math.cos(alpha), xCoordinateStart, yCoordinateStart);
         drawBaseShape(ctx2);
         ctx2.restore();
 
@@ -106,6 +107,13 @@ async function animateF4() {
 function drawFractal() {
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvasEdgeSize, canvasEdgeSize);
+
+    var inputStepCount = document.getElementById('stepCountInput').value;
+    if (inputStepCount) {
+        stepCount = inputStepCount;
+    }
+
     draw(ctx, stepCount);
 }
 
