@@ -37,29 +37,21 @@ $(function() {
     const axesHelper = new THREE.AxesHelper(20);
     scene.add( axesHelper );
 
-
-
-
     // create box
     var stepDepth = 5;
     var stepWidth = 10;
     var stepHeight = 1;
-
-    var boundingBoxDepth = 7;
-    var boundingBoxWidth = 15;
-
 
     var supportDepth = 0.5; 
     var supportWidth = 1; 
     var spaceBetweenFootsteps = 2;
    
 
-    var step, frame, box;
+    var step,  box;
     var currentXCoordinate = 0;
     var currentZCoordinate = 0;
 
-    var stairRotationInDegrees = 0;
-
+    var stairRotationInDegrees = 90;
     var verticalSupportRadius = 0.6;
 
     var stepCount = 7;
@@ -68,31 +60,24 @@ $(function() {
         var boxGeometry = new THREE.BoxGeometry(stepDepth,stepHeight,stepWidth);
         var boxMaterial = new THREE.MeshLambertMaterial({color: 0xff0000});
         box = new THREE.Mesh(boxGeometry, boxMaterial);
-
         box.castShadow = true;
-        box.position.x = - (stepDepth / 2 + verticalSupportRadius);
-        box.position.z = boundingBoxWidth - stepWidth / 2;
-
-        var frameGeometry = new THREE.BoxGeometry(2 * boundingBoxDepth, stepHeight , 2 * boundingBoxWidth);
-        var frameMaterial = new THREE.MeshBasicMaterial({color: 0xcccccc, wireframe: true});
-        frame = new THREE.Mesh(frameGeometry, frameMaterial);
 
         var stepSupportMaterial = new THREE.MeshLambertMaterial({color: 0x00ff00});
 
-        var horizontalStepSupportGeometry = new THREE.BoxGeometry(stepDepth - verticalSupportRadius, supportDepth, supportWidth);
+        var horizontalSupportLength = stepDepth / 2 + verticalSupportRadius;
+        var horizontalStepSupportGeometry = new THREE.BoxGeometry(horizontalSupportLength, supportDepth, supportWidth);
         var horizontalStepSupport = new THREE.Mesh(horizontalStepSupportGeometry, stepSupportMaterial);
-        horizontalStepSupport.position.x = -stepDepth / 2;
+        horizontalStepSupport.position.x = horizontalSupportLength / 2;
         horizontalStepSupport.position.y = -(stepHeight / 2 + supportDepth / 2);
-        horizontalStepSupport.position.z = boundingBoxWidth - stepWidth / 2;
 
         var verticalStepSupportGeometry = new THREE.CylinderGeometry(verticalSupportRadius, verticalSupportRadius, stepHeight * 2 + spaceBetweenFootsteps);
         var verticalStepSupport = new THREE.Mesh(verticalStepSupportGeometry, stepSupportMaterial);
-        verticalStepSupport.position.y = supportDepth;
-        verticalStepSupport.position.z = boundingBoxWidth - stepWidth / 2;
+        verticalStepSupport.position.x = stepDepth / 2 + verticalSupportRadius;
+        verticalStepSupport.position.y = 1;
+        verticalStepSupport.position.z = 0;
 
         step = new THREE.Object3D();
         step.add(box);
-        step.add(frame);
         step.add(horizontalStepSupport);
         if (i != stepCount - 1) {
             step.add(verticalStepSupport);
@@ -101,12 +86,14 @@ $(function() {
         step.position.x = currentXCoordinate;
         step.position.z = currentZCoordinate;
         step.position.y = supportDepth + (stepHeight / 2) + i * (stepHeight + spaceBetweenFootsteps);
-        step.rotation.y = degreesToRadians((stairRotationInDegrees / (stepCount - 1)) * i);//Math.atan((stepDepth / 2) / stepWidth) * i; // step rotation
+        var stepRotationInRadians = degreesToRadians((stairRotationInDegrees / (stepCount - 1)) * i)
+        step.rotation.y = stepRotationInRadians;
 
         scene.add(step);
 
-        // currentXCoordinate = currentXCoordinate - deltax;
-        // currentZCoordinate = currentZCoordinate - 1;
+        var shift = (stepDepth + 2 * verticalSupportRadius) / 2;
+        currentXCoordinate = currentXCoordinate + shift * Math.cos(stepRotationInRadians);
+        currentZCoordinate = currentZCoordinate - shift * Math.sin(stepRotationInRadians);
     }
   
 
