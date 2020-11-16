@@ -80,6 +80,7 @@ function draw(scene, stepCount, stepRotationInDegrees) {
     const railHeight = 10;
 
     const secondFloorDimension = 10;
+    const bevelSize = 0.5;
 
     var currentXCoordinate = 0;
     var currentZCoordinate = 0;
@@ -99,33 +100,30 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         railSupportTop
     ];
 
-    var points = [
-        new THREE.Vector2(0, 4.5),
-        new THREE.Vector2(2, 4.5),
-        new THREE.Vector2(2, -4.5),
-        new THREE.Vector2(-2, -4.5),
-        new THREE.Vector2(0, 4.5)
-    ]
     const extrudeSettings = {
         depth: 0,
-        bevelSize: 0.5,
-        bevelThickness: 0.5
-
+        bevelSize: bevelSize,
+        bevelThickness: bevelSize
     };
 
     setupLight(scene);
     createHelperAxis(scene);
     setupFloor(scene);
 
-
     var boxes = [];
-    var lastStep;
 
     const stepSupportMaterial = new THREE.MeshPhongMaterial({ color: 0x696969, shininess: 100 });
 
     for (i = 0; i < stepCount; i++) {
         const footstepMaterial = new THREE.MeshLambertMaterial({ color: 0xe5a970 });
-        const footstepShape = new THREE.Shape(points);
+        const footstepShape = new THREE.Shape();
+        const shapeWidth = stepWidth / 2 - bevelSize;
+        const shapedepth = stepDepth / 2 - bevelSize;
+        footstepShape.moveTo(0, shapeWidth);
+        footstepShape.lineTo(shapedepth, shapeWidth);
+        footstepShape.lineTo(shapedepth, -shapeWidth);
+        footstepShape.lineTo(-shapedepth, -shapeWidth);
+        footstepShape.quadraticCurveTo(-shapeWidth / 2, 0 ,0, shapeWidth);
         const footstepGeometry = new THREE.ExtrudeGeometry(footstepShape, extrudeSettings);
         const footstep = new THREE.Mesh(footstepGeometry, footstepMaterial);
         if (i % 2 == 0) {
