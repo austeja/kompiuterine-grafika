@@ -1,15 +1,29 @@
-function setupPlane(scene) {
-    var groundPlaneGeometry = new THREE.PlaneGeometry(50, 50);
-    var groundPlaneMaterial =    new THREE.MeshLambertMaterial({color: 0xffffff});
-    var groundPlane = new THREE.Mesh(groundPlaneGeometry, groundPlaneMaterial);
-    groundPlane.receiveShadow  = true;
+function setupFloor(scene) {
+    var floorGeometry = new THREE.PlaneGeometry(50, 50);
+    var floorMaterial = new THREE.MeshLambertMaterial({color: 0x928875});
+    var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.receiveShadow  = true;
 
-    groundPlane.rotation.x = -0.5 * Math.PI;
-    groundPlane.position.x = 15;
-    groundPlane.position.y = 0;
-    groundPlane.position.z = 0;
+    floor.rotation.x = -0.5 * Math.PI;
+    floor.position.x = 15;
+    floor.position.y = 0;
+    floor.position.z = 0;
 
-    scene.add(groundPlane);
+    scene.add(floor);
+}
+
+function setupCeiling(scene, height) {
+    var ceilingGeometry = new THREE.PlaneGeometry(50, 50);
+    var ceilingMaterial = new THREE.MeshLambertMaterial({color: 0xE1E1E1});
+    var ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+    ceiling.receiveShadow  = true;
+
+    ceiling.rotation.x = -0.5 * Math.PI;
+    ceiling.position.x = 15;
+    ceiling.position.y = height;
+    ceiling.position.z = 0;
+
+    scene.add(ceiling);
 }
 
 function degreesToRadians(degrees) {
@@ -95,7 +109,7 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         new THREE.Vector2(0, 4.5)
     ]
     const extrudeSettings = {
-        depth: 0.5,
+        depth: 0,
         bevelSize: 0.5,
         bevelThickness: 0.5
     
@@ -103,7 +117,8 @@ function draw(scene, stepCount, stepRotationInDegrees) {
     
     setupLight(scene);
     createHelperAxis(scene);
-    setupPlane(scene);
+    setupFloor(scene);
+  
   
     var handRailPoints = [];
     for (i = 0; i < stepCount; i++) {
@@ -113,10 +128,8 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         const footstep = new THREE.Mesh(footstepGeometry, footstepMaterial) ;
         if (i % 2 == 0) {
             footstep.rotation.x = degreesToRadians(270);
-            footstep.position.y = -supportDepth;
         } else {
             footstep.rotation.x = degreesToRadians(90);
-            footstep.position.y = supportDepth;
         }
 
         const stepSupportMaterial = new THREE.MeshPhongMaterial({color: 0x696969, shininess: 100});
@@ -170,6 +183,10 @@ function draw(scene, stepCount, stepRotationInDegrees) {
 
 
     }
+
+    const height = supportDepth + stepHeight + (stepHeight + spaceBetweenFootsteps) * (stepCount - 1);
+    setupCeiling(scene, height);
+    
 
     // var handRailCurve = new THREE.CatmullRomCurve3(handRailPoints);
     // var handRailGeometry = new THREE.TubeGeometry(handRailCurve, 100, supportDepth / 2, 100, false);
