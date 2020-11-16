@@ -32,11 +32,9 @@ function degreesToRadians(degrees) {
 
 function createRenderer() {
     var renderer = new THREE.WebGLRenderer();
-
     renderer.setClearColor(0xFFFFFF, 1.0); // background color
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMapEnabled = true;
-
     return renderer;
 }
 
@@ -71,28 +69,23 @@ function draw(scene, stepCount, stepRotationInDegrees) {
     const stepDepth = 5;
     const stepWidth = 10;
     const stepHeight = 1;
-
     const supportDepth = 0.5;
     const supportWidth = 1;
     const verticalSupportRadius = 0.6;
     const spaceBetweenFootsteps = 2;
-
     const railHeight = 10;
-
     const secondFloorDimension = 10;
     const bevelSize = 0.5;
 
-    var currentXCoordinate = 0;
-    var currentZCoordinate = 0;
+    const horizontalStepSupportY = -(stepHeight / 2 + supportDepth / 2);
+    const stepSupportMaterial = new THREE.MeshPhongMaterial({ color: 0x696969, shininess: 100 });
 
-    var horizontalStepSupportY = -(stepHeight / 2 + supportDepth / 2);
-
-    var railSupportUnderStepPoint = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 1);
-    var railSupportUnderStepPoint2 = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 0.125);
-    var railSupportCurve = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 + 0.125);
-    var railSupportMiddle = new THREE.Vector3(0, horizontalStepSupportY + 2, stepWidth / 2 + supportDepth / 2);
-    var railSupportTop = new THREE.Vector3(0, horizontalStepSupportY + railHeight, stepWidth / 2 + supportDepth / 2);
-    var railSupportPath = [
+    const railSupportUnderStepPoint = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 1);
+    const railSupportUnderStepPoint2 = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 0.125);
+    const railSupportCurve = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 + 0.125);
+    const railSupportMiddle = new THREE.Vector3(0, horizontalStepSupportY + 2, stepWidth / 2 + supportDepth / 2);
+    const railSupportTop = new THREE.Vector3(0, horizontalStepSupportY + railHeight, stepWidth / 2 + supportDepth / 2);
+    const railSupportPath = [
         railSupportUnderStepPoint,
         railSupportUnderStepPoint2,
         railSupportCurve,
@@ -106,14 +99,14 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         bevelThickness: bevelSize
     };
 
+    var boxes = [];
+    var currentXCoordinate = 0;
+    var currentZCoordinate = 0;
+
     setupLight(scene);
     createHelperAxis(scene);
     setupFloor(scene);
-
-    var boxes = [];
-
-    const stepSupportMaterial = new THREE.MeshPhongMaterial({ color: 0x696969, shininess: 100 });
-
+    
     for (i = 0; i < stepCount; i++) {
         const footstepMaterial = new THREE.MeshLambertMaterial({ color: 0xe5a970 });
         const footstepShape = new THREE.Shape();
