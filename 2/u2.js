@@ -84,10 +84,6 @@ function draw(scene, stepCount, stepRotationInDegrees) {
 
     var horizontalStepSupportY =  -(stepHeight / 2 + supportDepth / 2);
 
-    var railSupportTopX = 0;
-    var railSupportTopY = horizontalStepSupportY + railHeight;
-    var railSupportTopZ = stepWidth / 2 + supportDepth / 2;
-
     var railSupportUnderStepPoint = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 1);
     var railSupportUnderStepPoint2 = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 0.125);
     var railSupportCurve = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 + 0.125);
@@ -120,7 +116,10 @@ function draw(scene, stepCount, stepRotationInDegrees) {
     setupFloor(scene);
   
   
+    var boxes = [];
     var handRailPoints = [];
+    const stepSupportMaterial = new THREE.MeshPhongMaterial({color: 0x696969, shininess: 100});
+
     for (i = 0; i < stepCount; i++) {
         const footstepMaterial = new THREE.MeshLambertMaterial({color: 0xe5a970});
         const footstepShape = new THREE.Shape(points);
@@ -131,8 +130,6 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         } else {
             footstep.rotation.x = degreesToRadians(90);
         }
-
-        const stepSupportMaterial = new THREE.MeshPhongMaterial({color: 0x696969, shininess: 100});
 
         const horizontalSupportLength = stepDepth / 2 + verticalSupportRadius;
         const horizontalStepSupportGeometry = new THREE.BoxGeometry(horizontalSupportLength, supportDepth, supportWidth);
@@ -146,6 +143,15 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         verticalStepSupport.position.y = 1;
         verticalStepSupport.position.z = 0;
 
+        var boxGeometry = new THREE.BoxGeometry(0,0,0);
+        var boxMaterial = new THREE.MeshLambertMaterial({color: 0xff0000});
+        var box = new THREE.Mesh(boxGeometry, boxMaterial);
+        box.position.y = horizontalStepSupportY + railHeight;
+        box.position.z = stepWidth / 2 + supportDepth / 2;
+        box.material.transparent = true;
+        box.visible = false;
+        boxes.push(box);
+
         const verticalRailSupportCurve = new THREE.CatmullRomCurve3(railSupportPath);
         const verticalRailSupportGeometry = new THREE.TubeGeometry(verticalRailSupportCurve, 100, supportDepth / 2, 100, false);
         const verticalRailSupport = new THREE.Mesh(verticalRailSupportGeometry, stepSupportMaterial);
@@ -153,7 +159,8 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         const step = new THREE.Object3D();
         step.add(footstep);
         step.add(horizontalStepSupport);
-        if (i % 2 == 0) {
+        step.add(box);
+        if (i % 2 == 0 || i == stepCount - 1) {
             step.add(verticalRailSupport);
         }
         if (i != stepCount - 1) {
@@ -171,27 +178,22 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         var stepShift = (stepDepth + 2 * verticalSupportRadius) / 2;
         currentXCoordinate = currentXCoordinate + stepShift * Math.cos(stepRotationInRadians);
         currentZCoordinate = currentZCoordinate - stepShift * Math.sin(stepRotationInRadians);
-
-        handRailPoints.push(new THREE.Vector3(railSupportTopX, railSupportTopY, railSupportTopZ));
-
-        // var railShift = stepShift + Math.sin(stepRotationInRadians) * ;
-        // railSupportTopX = railSupportTopX + railShift * Math.cos(stepRotationInRadians);
-        // railSupportTopY = railSupportTopY + spaceBetweenFootsteps;
-        // railSupportTopZ = railSupportTopZ - railShift * Math.sin(stepRotationInRadians);
-        // var railShift = stepShift
-
-
-
     }
 
     const height = supportDepth + stepHeight + (stepHeight + spaceBetweenFootsteps) * (stepCount - 1);
-    setupCeiling(scene, height);
     
 
-    // var handRailCurve = new THREE.CatmullRomCurve3(handRailPoints);
-    // var handRailGeometry = new THREE.TubeGeometry(handRailCurve, 100, supportDepth / 2, 100, false);
-    // var handRail = new THREE.Mesh(handRailGeometry, stepSupportMaterial);
-    // scene.add(handRail); 
+    scene.updateMatrixWorld();
+    for(var i = 0; i < boxes.length; i++) {
+        const box = boxes[i];
+        var target = new THREE.Vector3(); 
+        box.getWorldPosition( target );
+        handRailPoints.push(target);
+    }
+    const handrailSupportCurve = new THREE.CatmullRomCurve3(handRailPoints);
+    const handrailSupportGeometry = new THREE.TubeGeometry(handrailSupportCurve, 100, supportDepth / 2, 100, false);
+    const handrail = new THREE.Mesh(handrailSupportGeometry, stepSupportMaterial);
+    scene.add(handrail);
 }
 
 $(function() {
