@@ -44,9 +44,9 @@ function clearScene(scene) {
     }
 }
 
-function redraw(scene, stepCount, stepRotationInDegrees) {
+function redraw(scene, stepCount, stepRotationInDegrees, radius) {
     clearScene(scene);
-    draw(scene, stepCount, stepRotationInDegrees);
+    draw(scene, stepCount, stepRotationInDegrees, radius);
 }
 
 function setupLight(scene) {
@@ -65,7 +65,7 @@ function createHelperAxis(scene) {
     scene.add(axesHelper);
 }
 
-function draw(scene, stepCount, stepRotationInDegrees) {
+function draw(scene, stepCount, stepRotationInDegrees, radius) {
     const stepDepth = 5;
     const stepWidth = 10;
     const stepHeight = 1;
@@ -80,19 +80,6 @@ function draw(scene, stepCount, stepRotationInDegrees) {
     const horizontalStepSupportY = -(stepHeight / 2 + supportDepth / 2);
     const stepSupportMaterial = new THREE.MeshPhongMaterial({ color: 0x696969, shininess: 100 });
 
-    const railSupportUnderStepPoint = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 1);
-    const railSupportUnderStepPoint2 = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 0.125);
-    const railSupportCurve = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 + 0.125);
-    const railSupportMiddle = new THREE.Vector3(0, horizontalStepSupportY + 2, stepWidth / 2 + supportDepth / 2);
-    const railSupportTop = new THREE.Vector3(0, horizontalStepSupportY + railHeight, stepWidth / 2 + supportDepth / 2);
-    const railSupportPath = [
-        railSupportUnderStepPoint,
-        railSupportUnderStepPoint2,
-        railSupportCurve,
-        railSupportMiddle,
-        railSupportTop
-    ];
-
     const extrudeSettings = {
         depth: 0,
         bevelSize: bevelSize,
@@ -106,7 +93,7 @@ function draw(scene, stepCount, stepRotationInDegrees) {
     setupLight(scene);
     createHelperAxis(scene);
     setupFloor(scene);
-    
+
     for (i = 0; i < stepCount; i++) {
         const footstepMaterial = new THREE.MeshLambertMaterial({ color: 0xe5a970 });
         const footstepShape = new THREE.Shape();
@@ -119,33 +106,48 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         footstepShape.quadraticCurveTo(-shapeWidth / 2, 0 ,0, shapeWidth);
         const footstepGeometry = new THREE.ExtrudeGeometry(footstepShape, extrudeSettings);
         const footstep = new THREE.Mesh(footstepGeometry, footstepMaterial);
+        footstep.position.z = radius;
         if (i % 2 == 0) {
             footstep.rotation.x = degreesToRadians(270);
         } else {
             footstep.rotation.x = degreesToRadians(90);
         }
 
-        const horizontalSupportLength = stepDepth / 2 + verticalSupportRadius;
+        const singleStepRotationInRadians = degreesToRadians(stepRotationInDegrees / (stepCount - 1));
+        const horizontalSupportLength = stepDepth / 2 + verticalSupportRadius + Math.sin(singleStepRotationInRadians) * radius;
         const horizontalStepSupportGeometry = new THREE.BoxGeometry(horizontalSupportLength, supportDepth, supportWidth);
         const horizontalStepSupport = new THREE.Mesh(horizontalStepSupportGeometry, stepSupportMaterial);
-        horizontalStepSupport.position.x = horizontalSupportLength / 2;
+        horizontalStepSupport.position.x = horizontalSupportLength / 2 - Math.sin(singleStepRotationInRadians) * radius;
         horizontalStepSupport.position.y = horizontalStepSupportY;
+        horizontalStepSupport.position.z = radius;
 
         const verticalStepSupportGeometry = new THREE.CylinderGeometry(verticalSupportRadius, verticalSupportRadius, stepHeight * 2 + spaceBetweenFootsteps);
         const verticalStepSupport = new THREE.Mesh(verticalStepSupportGeometry, stepSupportMaterial);
         verticalStepSupport.position.x = stepDepth / 2 + verticalSupportRadius;
         verticalStepSupport.position.y = 1;
-        verticalStepSupport.position.z = 0;
+        verticalStepSupport.position.z = radius;
 
         const boxGeometry = new THREE.BoxGeometry(0, 0, 0);
         const boxMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
         const box = new THREE.Mesh(boxGeometry, boxMaterial);
         box.position.y = horizontalStepSupportY + railHeight;
-        box.position.z = stepWidth / 2 + supportDepth / 2;
+        box.position.z = stepWidth / 2 + supportDepth / 2 + radius;
         box.material.transparent = true;
         box.visible = false;
         boxes.push(box);
 
+        const railSupportUnderStepPoint = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 1 + radius);
+        const railSupportUnderStepPoint2 = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 - 0.125 + radius);
+        const railSupportCurve = new THREE.Vector3(0, horizontalStepSupportY, stepWidth / 2 + 0.125 + radius);
+        const railSupportMiddle = new THREE.Vector3(0, horizontalStepSupportY + 2, stepWidth / 2 + supportDepth / 2 + radius);
+        const railSupportTop = new THREE.Vector3(0, horizontalStepSupportY + railHeight, stepWidth / 2 + supportDepth / 2 + radius);
+        const railSupportPath = [
+            railSupportUnderStepPoint,
+            railSupportUnderStepPoint2,
+            railSupportCurve,
+            railSupportMiddle,
+            railSupportTop
+        ];
         const verticalRailSupportCurve = new THREE.CatmullRomCurve3(railSupportPath);
         const verticalRailSupportGeometry = new THREE.TubeGeometry(verticalRailSupportCurve, 100, supportDepth / 2, 100, false);
         const verticalRailSupport = new THREE.Mesh(verticalRailSupportGeometry, stepSupportMaterial);
@@ -167,9 +169,9 @@ function draw(scene, stepCount, stepRotationInDegrees) {
             ceiling.rotation.x = -0.5 * Math.PI;
             ceiling.position.x = secondFloorDimension / 2 + stepDepth / 2 - 0.5;
             ceiling.position.y = stepHeight / 2;
+            ceiling.position.z = radius;
             step.add(ceiling);
         }
-
         const stepRotationInRadians = degreesToRadians((stepRotationInDegrees / (stepCount - 1)) * i)
 
         step.position.x = currentXCoordinate;
@@ -180,7 +182,7 @@ function draw(scene, stepCount, stepRotationInDegrees) {
 
         var stepShift = (stepDepth + 2 * verticalSupportRadius) / 2;
         currentXCoordinate = currentXCoordinate + stepShift * Math.cos(stepRotationInRadians);
-        currentZCoordinate = currentZCoordinate - stepShift * Math.sin(stepRotationInRadians);
+        currentZCoordinate = currentZCoordinate - stepShift * Math.sin(stepRotationInRadians) - radius / 40;
     }
 
     scene.updateMatrixWorld();
@@ -205,18 +207,23 @@ $(function () {
     const gui = new dat.GUI();
     const parameters = {
         stepCount: 7,
-        stairRotationInDegrees: 90
+        stairRotationInDegrees: 90,
+        radius: 0
     }
     gui.add(parameters, 'stepCount', 2, 20)
         .step(1)
         .name('Step count')
-        .onFinishChange(() => redraw(scene, parameters.stepCount, parameters.stairRotationInDegrees));
+        .onFinishChange(() => redraw(scene, parameters.stepCount, parameters.stairRotationInDegrees, parameters.radius));
     gui.add(parameters, 'stairRotationInDegrees', 0, 180)
         .step(10)
         .name('Stair rotation')
-        .onFinishChange(() => redraw(scene, parameters.stepCount, parameters.stairRotationInDegrees));
+        .onFinishChange(() => redraw(scene, parameters.stepCount, parameters.stairRotationInDegrees, parameters.radius));
+    gui.add(parameters, 'radius', 0, 5)
+        .step(1)
+        .name('Ratotion radius')
+        .onFinishChange(() => redraw(scene, parameters.stepCount, parameters.stairRotationInDegrees, parameters.radius));
 
-    draw(scene, parameters.stepCount, parameters.stairRotationInDegrees);
+    draw(scene, parameters.stepCount, parameters.stairRotationInDegrees, parameters.radius);
 
     camera.position.x = -10;
     camera.position.y = 20;
