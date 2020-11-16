@@ -88,16 +88,16 @@ function draw(scene, stepCount, stepRotationInDegrees) {
     ];
 
     var points = [
-        new THREE.Vector2(-0.5, 5),
-        new THREE.Vector2(2.5, 5),
-        new THREE.Vector2(2.5, -5),
-        new THREE.Vector2(-2.5, -5),
-        new THREE.Vector2(-0.5, 5)
+        new THREE.Vector2(0, 4.5),
+        new THREE.Vector2(2, 4.5),
+        new THREE.Vector2(2, -4.5),
+        new THREE.Vector2(-2, -4.5),
+        new THREE.Vector2(0, 4.5)
     ]
     const extrudeSettings = {
-        depth: 1,
-        bevelSize: 0,
-        bevelThickness: 0
+        depth: 0.5,
+        bevelSize: 0.5,
+        bevelThickness: 0.5
     
     };
     
@@ -107,11 +107,10 @@ function draw(scene, stepCount, stepRotationInDegrees) {
   
     var handRailPoints = [];
     for (i = 0; i < stepCount; i++) {
-        const footstepMaterial = new THREE.MeshLambertMaterial({color: 0xFFE5CC});
+        const footstepMaterial = new THREE.MeshLambertMaterial({color: 0xe5a970});
         const footstepShape = new THREE.Shape(points);
         const footstepGeometry = new THREE.ExtrudeGeometry(footstepShape, extrudeSettings);
         const footstep = new THREE.Mesh(footstepGeometry, footstepMaterial) ;
-      
         if (i % 2 == 0) {
             footstep.rotation.x = degreesToRadians(270);
             footstep.position.y = -supportDepth;
@@ -120,7 +119,7 @@ function draw(scene, stepCount, stepRotationInDegrees) {
             footstep.position.y = supportDepth;
         }
 
-        const stepSupportMaterial = new THREE.MeshLambertMaterial({color: 0x696969});
+        const stepSupportMaterial = new THREE.MeshPhongMaterial({color: 0x696969, shininess: 100});
 
         const horizontalSupportLength = stepDepth / 2 + verticalSupportRadius;
         const horizontalStepSupportGeometry = new THREE.BoxGeometry(horizontalSupportLength, supportDepth, supportWidth);
@@ -134,14 +133,16 @@ function draw(scene, stepCount, stepRotationInDegrees) {
         verticalStepSupport.position.y = 1;
         verticalStepSupport.position.z = 0;
 
-        const curve = new THREE.CatmullRomCurve3(railSupportPath);
-        const verticalRailSupportGeometry = new THREE.TubeGeometry(curve, 100, supportDepth / 2, 100, false);
-        const railSupport = new THREE.Mesh(verticalRailSupportGeometry, stepSupportMaterial);
+        const verticalRailSupportCurve = new THREE.CatmullRomCurve3(railSupportPath);
+        const verticalRailSupportGeometry = new THREE.TubeGeometry(verticalRailSupportCurve, 100, supportDepth / 2, 100, false);
+        const verticalRailSupport = new THREE.Mesh(verticalRailSupportGeometry, stepSupportMaterial);
       
         const step = new THREE.Object3D();
         step.add(footstep);
         step.add(horizontalStepSupport);
-        step.add(railSupport);
+        if (i % 2 == 0) {
+            step.add(verticalRailSupport);
+        }
         if (i != stepCount - 1) {
             step.add(verticalStepSupport);
         }
