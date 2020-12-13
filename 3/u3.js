@@ -1,4 +1,6 @@
-const torusRadius = 3;
+const torusRadiusSmall = 3;
+const torusRadiusBig = 5;
+
 
 function setupFloor(scene) {
     var floorGeometry = new THREE.PlaneGeometry(50, 50);
@@ -51,8 +53,8 @@ function addDot(scene, x, y, z) {
 
 function getRandomNumber() {
     const plusOrMinus = Math.random() < 0.5 ? -1 : 1;
-    const numberPadding = torusRadius * 1.5;
-    const number = Math.random() * (torusRadius + numberPadding);
+    const numberPadding = torusRadiusBig * 1.5;
+    const number = Math.random() * (torusRadiusBig + numberPadding);
     return number * plusOrMinus;
 }
 
@@ -73,9 +75,9 @@ function generateTorusPoints(scene) {
         y = getRandomNumber();
         z = getRandomNumber();
 
-        const lhsSubPart = Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2) - Math.pow(torusRadius, 2);
+        const lhsSubPart = Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2) - Math.pow(torusRadiusSmall, 2);
         const lhs = Math.pow(lhsSubPart, 2);
-        const rhs = 4 * Math.pow(torusRadius, 2) * (Math.pow(x, 2) + Math.pow(z, 2));
+        const rhs = 4 * Math.pow(torusRadiusBig, 2) * (Math.pow(x, 2) + Math.pow(z, 2));
         if (lhs <= rhs) {
             points.push(new THREE.Vector3(x, y, z));
         }
@@ -85,7 +87,7 @@ function generateTorusPoints(scene) {
     const upperLayerFaces2d = hullGeometry.faceVertexUvs[0];
     const geometryFaces3d = hullGeometry.faces;
     const vertices = hullGeometry.vertices;
-    console.error("faces1", upperLayerFaces2d);
+    // console.error("faces1", upperLayerFaces2d);
     // console.error("faces2", geometryFaces3d);
 
     const facesCount = upperLayerFaces2d.length;
@@ -99,7 +101,7 @@ function generateTorusPoints(scene) {
 
         // console.error(geometryFace, vertex1, vertex2, vertex3);
 
-        
+
         upperLayerFace = upperLayerFaces2d[i]; // [(x, y), (x, y), (x, y)]
         upperLayerFace[0].x = getX(vertex1);
         upperLayerFace[0].y = 1;
@@ -110,21 +112,26 @@ function generateTorusPoints(scene) {
         console.error("adjusted face", upperLayerFace);
     }
 
-    // hullGeometry.faceVertexUvs[0][0] = new THREE.Vector2(0,0);
-    // hullGeometry.faceVertexUvs[0][1] = new THREE.Vector2(1,1);
-    // hullGeometry.faceVertexUvs[0][2] = new THREE.Vector2(2,2);
+    const loader = new THREE.TextureLoader();
+    loader.crossOrigin = '';
+    loader.load(
+        'https://i.imgur.com/KOgaj60.png',
+        function (chessTexture) {
+            console.error("mo", chessTexture);
 
 
-    const chessTexture = THREE.ImageUtils.loadTexture("chessBoard.png");
-    console.error(chessTexture);
-    const chessTextureMaterial = new THREE.MeshPhongMaterial();
-    chessTextureMaterial.map = chessTexture;
-    chessTextureMaterial.transparent = true;
-  
-    // const wireFrameMaterial = new THREE.MeshBasicMaterial();
-    // wireFrameMaterial.wireframe = true;
-    
-    const mesh = THREE.SceneUtils.createMultiMaterialObject(hullGeometry, [chessTextureMaterial]);
+        });
+
+
+
+    // const chessTexture = THREE.ImageUtils.loadTexture("chessBoard.png");
+    // console.error(chessTexture);
+    // const chessTextureMaterial = new THREE.MeshPhongMaterial();
+    // chessTextureMaterial.map = chessTexture;
+    // chessTextureMaterial.transparent = true;
+
+    const basicMaterial = new THREE.MeshLambertMaterial({ color: 0xe5a970 });
+    const mesh = THREE.SceneUtils.createMultiMaterialObject(hullGeometry, [basicMaterial]);
     // mesh.position.y = 5;
 
     scene.add(mesh);
@@ -135,7 +142,7 @@ $(function () {
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = createRenderer();
 
-    setupFloor(scene);
+    // setupFloor(scene);
     setupLight(scene);
     // createHelperAxis(scene);
 
