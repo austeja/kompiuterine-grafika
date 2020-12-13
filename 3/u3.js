@@ -40,7 +40,7 @@ function createHelperAxis(scene) {
 }
 
 function addDot(scene, x, y, z) {
-    const boxGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const boxGeometry = new THREE.SphereGeometry(0.05);
     const boxMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
     box.position.x = x;
@@ -59,11 +59,41 @@ function getRandomNumber() {
 }
 
 function getX(vertex) {
-    return (Math.atan2(vertex.z, vertex.x))
+    // u coordinate calculation
+    // ϕ = 2πu  =>  u = ϕ / 2π
+    const ϕ = Math.atan2(vertex.x, vertex.z);
+    return ϕ / (2 * Math.PI) + 0.5;
+}
+
+function getY(vertex) {
+
+    //todo
+    // v coordinate
+    // ψ = π(v − 1/2)  =>  (v − 1/2) = ψ/π  =>  v = ψ/π + 1/2
+
+    // y = r sin ψ
+    const sinphi = vertex.y / torusRadiusSmall;
+    //cos(a) = sqrt(1 - sin(a)^2))
+    const cosphi = Math.sqrt(1 - Math.pow(sinphi, 2));
+    // console.error(sinphi, cosphi);
+    const w = torusRadiusSmall * cosphi;
+
+    // const ψ = Math.atan2(w, vertex.y);
+    const ψ = Math.atan2(vertex.y, w);
+    return ψ / Math.PI + 0.5;
+}
+
+function adjustSeam(face1, face2) {
+    const dif = 0.9;
+    if (Math.abs(face1.x - face2.x) > dif) {
+        console.error(face1, face2);
+        const faceToAdjust = face1.x > face2.x ? face1 : face2;
+        faceToAdjust.x = 0;
+    }
 }
 
 function generateTorusPoints(scene) {
-    const numberOfPoints = 10000;
+    const numberOfPoints = 50000;
 
     var x = 0;
     var y = 0;
@@ -87,29 +117,30 @@ function generateTorusPoints(scene) {
     const upperLayerFaces2d = hullGeometry.faceVertexUvs[0];
     const geometryFaces3d = hullGeometry.faces;
     const vertices = hullGeometry.vertices;
-    // console.error("faces1", upperLayerFaces2d);
-    // console.error("faces2", geometryFaces3d);
 
     const facesCount = upperLayerFaces2d.length;
     var upperLayerFace;
     var geometryFace;
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < facesCount; i++) {
         geometryFace = geometryFaces3d[i];
         const vertex1 = vertices[geometryFace.a];
         const vertex2 = vertices[geometryFace.b];
         const vertex3 = vertices[geometryFace.c];
 
-        // console.error(geometryFace, vertex1, vertex2, vertex3);
+        upperLayerFace = upperLayerFaces2d[i];
 
-
-        upperLayerFace = upperLayerFaces2d[i]; // [(x, y), (x, y), (x, y)]
         upperLayerFace[0].x = getX(vertex1);
-        upperLayerFace[0].y = 1;
+        // upperLayerFace[0].y = getY(vertex1);
+
         upperLayerFace[1].x = getX(vertex2);
-        upperLayerFace[1].y = 1;
+        // upperLayerFace[1].y = getY(vertex2);
+
         upperLayerFace[2].x = getX(vertex3);
-        upperLayerFace[2].y = 1;
-        console.error("adjusted face", upperLayerFace);
+        // upperLayerFace[2].y = getY(vertex3);
+
+        adjustSeam(upperLayerFace[0], upperLayerFace[1]);
+        adjustSeam(upperLayerFace[1], upperLayerFace[2]);
+        adjustSeam(upperLayerFace[2], upperLayerFace[0]);
     }
 
     const loader = new THREE.TextureLoader();
@@ -119,23 +150,17 @@ function generateTorusPoints(scene) {
         function (chessTexture) {
             console.error("mo", chessTexture);
 
+            const chessTextureMaterial = new THREE.MeshPhongMaterial();
+            chessTextureMaterial.map = chessTexture;
+            chessTextureMaterial.transparent = true;
 
+            // const basicMaterial = new THREE.MeshLambertMaterial({ color: 0xe5a970 });
+            const mesh = THREE.SceneUtils.createMultiMaterialObject(hullGeometry, [chessTextureMaterial]);
+
+            scene.add(mesh);
         });
-
-
-
-    // const chessTexture = THREE.ImageUtils.loadTexture("chessBoard.png");
-    // console.error(chessTexture);
-    // const chessTextureMaterial = new THREE.MeshPhongMaterial();
-    // chessTextureMaterial.map = chessTexture;
-    // chessTextureMaterial.transparent = true;
-
-    const basicMaterial = new THREE.MeshLambertMaterial({ color: 0xe5a970 });
-    const mesh = THREE.SceneUtils.createMultiMaterialObject(hullGeometry, [basicMaterial]);
-    // mesh.position.y = 5;
-
-    scene.add(mesh);
 }
+
 
 $(function () {
     var scene = new THREE.Scene();
