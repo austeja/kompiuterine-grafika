@@ -1,5 +1,5 @@
 const torusRadiusSmall = 3;
-const torusRadiusBig = 5;
+const torusRadiusBig = 7;
 
 
 function setupFloor(scene) {
@@ -66,19 +66,10 @@ function getX(vertex) {
 }
 
 function getY(vertex) {
-
-    //todo
-    // v coordinate
+    // v coordinate calculation
     // ψ = π(v − 1/2)  =>  (v − 1/2) = ψ/π  =>  v = ψ/π + 1/2
-
-    // y = r sin ψ
-    const sinphi = vertex.y / torusRadiusSmall;
-    //cos(a) = sqrt(1 - sin(a)^2))
-    const cosphi = Math.sqrt(1 - Math.pow(sinphi, 2));
-    // console.error(sinphi, cosphi);
-    const w = torusRadiusSmall * cosphi;
-
-    // const ψ = Math.atan2(w, vertex.y);
+    const ϕ = Math.atan2(vertex.x, vertex.z);
+    const w = (vertex.x / Math.sin(ϕ)) - torusRadiusBig;
     const ψ = Math.atan2(vertex.y, w);
     return ψ / Math.PI + 0.5;
 }
@@ -130,13 +121,13 @@ function generateTorusPoints(scene) {
         upperLayerFace = upperLayerFaces2d[i];
 
         upperLayerFace[0].x = getX(vertex1);
-        // upperLayerFace[0].y = getY(vertex1);
+        upperLayerFace[0].y = getY(vertex1);
 
         upperLayerFace[1].x = getX(vertex2);
-        // upperLayerFace[1].y = getY(vertex2);
+        upperLayerFace[1].y = getY(vertex2);
 
         upperLayerFace[2].x = getX(vertex3);
-        // upperLayerFace[2].y = getY(vertex3);
+        upperLayerFace[2].y = getY(vertex3);
 
         adjustSeam(upperLayerFace[0], upperLayerFace[1]);
         adjustSeam(upperLayerFace[1], upperLayerFace[2]);
