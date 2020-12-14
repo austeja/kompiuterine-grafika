@@ -1,7 +1,63 @@
+function sleep(ms) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, ms);
+    });
+}
+
+const bishopPoints = [
+    new THREE.Vector2(0, 8.38),
+    new THREE.Vector2(0.3025, 8.36125),
+    new THREE.Vector2(0.4425, 8.16125),
+    new THREE.Vector2(0.4025, 7.90125),
+    new THREE.Vector2(0.1625, 7.80125),
+    new THREE.Vector2(0.2225, 7.54125),
+    new THREE.Vector2(0.4025, 7.34125),
+    new THREE.Vector2(0.6025, 7.12125),
+    new THREE.Vector2(0.7625, 6.94125),
+    new THREE.Vector2(0.8025, 6.70125),
+    new THREE.Vector2(0.7425, 6.42125),
+    new THREE.Vector2(0.5625, 6.26125),
+    new THREE.Vector2(0.3225, 6.22125),
+    new THREE.Vector2(0.6425, 5.98125),
+    new THREE.Vector2(0.3025, 5.86125),
+    new THREE.Vector2(0.3025, 5.56125),
+    new THREE.Vector2(0.5425, 5.46125),
+    new THREE.Vector2(0.8025, 5.40125),
+    new THREE.Vector2(1.0425, 5.34125),
+    new THREE.Vector2(1.0625, 5.14125),
+    new THREE.Vector2(0.8025, 5.16125),
+    new THREE.Vector2(0.5225, 5.16125),
+    new THREE.Vector2(0.3625, 5.18125),
+    new THREE.Vector2(0.4025, 4.78125),
+    new THREE.Vector2(0.5225, 4.38125),
+    new THREE.Vector2(0.6625, 3.94125),
+    new THREE.Vector2(0.7825, 3.58125),
+    new THREE.Vector2(0.9025, 3.20125),
+    new THREE.Vector2(1.0625, 2.82125),
+    new THREE.Vector2(1.2625, 2.46125),
+    new THREE.Vector2(1.4225, 2.08125),
+    new THREE.Vector2(1.7025, 2.04125),
+    new THREE.Vector2(1.9425, 1.86125),
+    new THREE.Vector2(1.7425, 1.64125),
+    new THREE.Vector2(1.5025, 1.56125),
+    new THREE.Vector2(1.7625, 1.30125),
+    new THREE.Vector2(2, 1),
+    new THREE.Vector2(2.3025, 0.88125),
+    new THREE.Vector2(2.7025, 0.84125),
+    new THREE.Vector2(2.7025, 0),
+    new THREE.Vector2(0, 0)
+];
+
+const boardLetters = 'ABCDEFGH';
+const boardEdgeSize = 80;
+const cellEdgeSize = 9.2;
+const animationStepCount = 100;
 
 function createRenderer() {
     var renderer = new THREE.WebGLRenderer();
-    renderer.setClearColor(0xFFFFFF, 1.0); // background color
+    renderer.setClearColor(0xFFFFFF, 1.0);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMapEnabled = true;
     return renderer;
@@ -30,7 +86,7 @@ function createHelperAxis(scene) {
 }
 
 function drawChessBoard(scene, chessBoardTexture) {
-    const chessBoardGeometry = new THREE.PlaneGeometry(80, 80);
+    const chessBoardGeometry = new THREE.PlaneGeometry(boardEdgeSize, boardEdgeSize);
     const chessBoardMaterial = new THREE.MeshBasicMaterial({ map: chessBoardTexture, side: THREE.DoubleSide });
     const chessBoard = new THREE.Mesh(chessBoardGeometry, chessBoardMaterial);
     chessBoard.receiveShadow = true;
@@ -38,68 +94,79 @@ function drawChessBoard(scene, chessBoardTexture) {
     scene.add(chessBoard);
 }
 
-function drawBishop(scene) {
-    const points = [];
-    points.push(new THREE.Vector2(0, 8.38));
-    points.push(new THREE.Vector2(0.3025, 8.36125));
-    points.push(new THREE.Vector2(0.4425, 8.16125));
-    points.push(new THREE.Vector2(0.4025, 7.90125));
-    points.push(new THREE.Vector2(0.1625, 7.80125));
-    points.push(new THREE.Vector2(0.2225, 7.54125));
-    points.push(new THREE.Vector2(0.4025, 7.34125));
-    points.push(new THREE.Vector2(0.6025, 7.12125));
-    points.push(new THREE.Vector2(0.7625, 6.94125));
-    points.push(new THREE.Vector2(0.8025, 6.70125));
-    points.push(new THREE.Vector2(0.7425, 6.42125));
-    points.push(new THREE.Vector2(0.5625, 6.26125));
-    points.push(new THREE.Vector2(0.3225, 6.22125));
-    points.push(new THREE.Vector2(0.6425, 5.98125));
-    points.push(new THREE.Vector2(0.3025, 5.86125));
-    points.push(new THREE.Vector2(0.3025, 5.56125));
-    points.push(new THREE.Vector2(0.5425, 5.46125));
-    points.push(new THREE.Vector2(0.8025, 5.40125));
-    points.push(new THREE.Vector2(1.0425, 5.34125));
-    points.push(new THREE.Vector2(1.0625, 5.14125));
-    points.push(new THREE.Vector2(0.8025, 5.16125));
-    points.push(new THREE.Vector2(0.5225, 5.16125));
-    points.push(new THREE.Vector2(0.3625, 5.18125));
-    points.push(new THREE.Vector2(0.4025, 4.78125));
-    points.push(new THREE.Vector2(0.5225, 4.38125));
-    points.push(new THREE.Vector2(0.6625, 3.94125));
-    points.push(new THREE.Vector2(0.7825, 3.58125));
-    points.push(new THREE.Vector2(0.9025, 3.20125));
-    points.push(new THREE.Vector2(1.0625, 2.82125));
-    points.push(new THREE.Vector2(1.2625, 2.46125));
-    points.push(new THREE.Vector2(1.4225, 2.08125));
-    points.push(new THREE.Vector2(1.7025, 2.04125));
-    points.push(new THREE.Vector2(1.9425, 1.86125));
-    points.push(new THREE.Vector2(1.7425, 1.64125));
-    points.push(new THREE.Vector2(1.5025, 1.56125));
-    points.push(new THREE.Vector2(1.7625, 1.30125));
-    points.push(new THREE.Vector2(2, 1));
-    points.push(new THREE.Vector2(2.3025, 0.88125));
-    points.push(new THREE.Vector2(2.7025, 0.84125));
-    points.push(new THREE.Vector2(2.7025, 0));
-    points.push(new THREE.Vector2(0, 0));
+async function goToCellOnBoard(letter, number, bishop) {
+    console.error('bishop starting coordinates', bishop.position.x, bishop.position.z);
 
-    const latheGeometry = new THREE.LatheGeometry(points);
+    const letterIndex = boardLetters.indexOf(letter.toUpperCase());
+    if (letterIndex == -1) {
+        alert('Invalid board letter');
+        return;
+    }
+    if (number < 1 || number > 8) {
+        alert('Invalid board number');
+        return;
+    }
+
+    const adjustedIndex = 7 - letterIndex;
+    const xCoordinate = cellEdgeSize / 2 + (3 - adjustedIndex) * cellEdgeSize;
+
+    const adjustedNumber = 9 - number;
+    const zCoordinate = cellEdgeSize / 2 + (adjustedNumber - 5) * cellEdgeSize;
+
+    const xDelta = xCoordinate - bishop.position.x;
+    const zDelta = zCoordinate - bishop.position.z;
+    const xStep = xDelta / animationStepCount;
+    const zStep = zDelta / animationStepCount;
+    for (var i = 0; i <= animationStepCount; i++) {
+        bishop.position.x += xStep;
+        bishop.position.z += zStep;
+        await sleep(15);
+    }
+}
+
+function drawBishop(scene) {
+    const latheGeometry = new THREE.LatheGeometry(bishopPoints);
     latheGeometry.computeVertexNormals();
     latheGeometry.computeFaceNormals();
     const bishopMaterial = new THREE.MeshBasicMaterial({ color: 0x2446ab });
     const bishop = new THREE.Mesh(latheGeometry, bishopMaterial);
     bishop.position.y = 0.05;
+    bishop.position.x = boardEdgeSize / 8 / 2;
     scene.add(bishop);
+    return bishop;
 }
 
 function drawBoard(scene) {
     const loader = new THREE.TextureLoader();
     loader.crossOrigin = '';
     loader.load(
-        'https://i.imgur.com/KOgaj60.png',
-        function (chessBoardTexture) {
+        'https://i.imgur.com/LsAGXuS.png',
+        async function (chessBoardTexture) {
             drawChessBoard(scene, chessBoardTexture);
-            drawBishop(scene);
+            const bishop = drawBishop(scene);
+            await goToCellOnBoard('A', 1, bishop);
+            initializeControls('A', 1, bishop);
         });
+}
+
+function initializeControls(bishopStartingPositionLetter, bishopStartingPositionNumber, bishop) {
+    const gui = new dat.GUI();
+    const parameters = {
+        moveToLetter: bishopStartingPositionLetter,
+        moveToNumber: bishopStartingPositionNumber,
+        placeholder: () => { }
+    }
+
+    gui.add(parameters, 'moveToLetter')
+        .name('Move to letter');
+    gui.add(parameters, 'moveToNumber', 1, 8)
+        .step(1)
+        .name('Move to number');
+
+    const funcHolder = {
+        move: () => goToCellOnBoard(parameters.moveToLetter, parameters.moveToNumber, bishop)
+    };
+    gui.add(funcHolder, 'move').name('Move');
 }
 
 $(function () {
@@ -107,17 +174,9 @@ $(function () {
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = createRenderer();
 
-    const gui = new dat.GUI();
-    // const parameters = {
-    //     stepCount: 7,
-    //     stairRotationInDegrees: 90,
-    //     radius: 0
-    // }
-    // gui.add(parameters, 'stepCount', 2, 20)
-    //     .step(1)
-    //     .name('Step count')
-    //     .onFinishChange(() => redraw(scene, parameters.stepCount, parameters.stairRotationInDegrees, parameters.radius));
 
+
+    createHelperAxis(scene);
     setupLight(scene);
     drawBoard(scene);
 
