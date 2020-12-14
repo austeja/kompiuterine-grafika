@@ -55,6 +55,8 @@ const boardEdgeSize = 80;
 const cellEdgeSize = 9.2;
 const animationStepCount = 100;
 
+var scene, camera, renderer, controls;
+
 function createRenderer() {
     var renderer = new THREE.WebGLRenderer();
     renderer.setClearColor(0xFFFFFF, 1.0);
@@ -151,12 +153,20 @@ async function drawBoard(scene) {
     return promise;
 }
 
-function initializeControls(bishopStartingPositionLetter, bishopStartingPositionNumber, bishop) {
+function doDollyZoom(camera, bishop) {
+    // camera.position.x = 0;
+    // camera.position.y = 10;
+    // camera.position.z = 60;
+    camera.lookAt(bishop.position);
+    console.error(bishop.position);
+    // this.cameraPosition = 3;
+}
+
+function initializeControls(bishopStartingPositionLetter, bishopStartingPositionNumber, bishop, camera) {
     const gui = new dat.GUI();
     const parameters = {
         moveToLetter: bishopStartingPositionLetter,
-        moveToNumber: bishopStartingPositionNumber,
-        placeholder: () => { }
+        moveToNumber: bishopStartingPositionNumber
     }
 
     gui.add(parameters, 'moveToLetter')
@@ -166,16 +176,23 @@ function initializeControls(bishopStartingPositionLetter, bishopStartingPosition
         .name('Move to number');
 
     const funcHolder = {
-        move: () => goToCellOnBoard(parameters.moveToLetter, parameters.moveToNumber, bishop)
+        move: () => goToCellOnBoard(parameters.moveToLetter, parameters.moveToNumber, bishop),
+        dollyZoom: () => doDollyZoom(camera, bishop)
     };
     gui.add(funcHolder, 'move').name('Move');
+    gui.add(funcHolder, 'dollyZoom').name('Dolly zoom');
+}
+
+function render() {
+    renderer.render(scene, camera);
+    requestAnimationFrame(render);
+    controls.update();
 }
 
 async function init() {
-    var scene = new THREE.Scene();
-    var renderer = createRenderer();
+    scene = new THREE.Scene();
 
-    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.x = -10;
     camera.position.y = 20;
     camera.position.z = 35;
@@ -186,17 +203,14 @@ async function init() {
 
     const bishop = await drawBoard(scene);
     goToCellOnBoard('A', 1, bishop);
-    initializeControls('A', 1, bishop);
+    initializeControls('A', 1, bishop, camera);
 
+    renderer = createRenderer();
     $("#WebGL-output").append(renderer.domElement);
-    var controls = new THREE.TrackballControls(camera, renderer.domElement);
+    controls = new THREE.TrackballControls(camera, renderer.domElement);
     render();
-
-    function render() {
-        renderer.render(scene, camera);
-        requestAnimationFrame(render);
-        controls.update();
-    }
 }
+
+
 
 init();
