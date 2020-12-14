@@ -1,20 +1,6 @@
 const torusRadiusSmall = 3;
 const torusRadiusBig = 7;
 
-
-function setupFloor(scene) {
-    var floorGeometry = new THREE.PlaneGeometry(50, 50);
-    var floorMaterial = new THREE.MeshLambertMaterial({ color: 0x928875 });
-    var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.receiveShadow = true;
-    floor.rotation.x = -0.5 * Math.PI;
-    scene.add(floor);
-}
-
-function degreesToRadians(degrees) {
-    return degrees * (Math.PI / 180);
-}
-
 function createRenderer() {
     var renderer = new THREE.WebGLRenderer();
     renderer.setClearColor(0xFFFFFF, 1.0); // background color
@@ -29,7 +15,7 @@ function setupLight(scene) {
     spotLight.castShadow = true;
     scene.add(spotLight);
 
-    var ambientLight = new THREE.AmbientLight(0x404040);
+    var ambientLight = new THREE.AmbientLight(0xE1E1E1);
     scene.add(ambientLight);
 }
 
@@ -146,19 +132,21 @@ function generateTorusPoints(scene) {
             chessTextureMaterial.transparent = true;
 
             // const basicMaterial = new THREE.MeshLambertMaterial({ color: 0xe5a970 });
-            const mesh = THREE.SceneUtils.createMultiMaterialObject(hullGeometry, [chessTextureMaterial]);
+
+            const wireFrameMaterial = new THREE.MeshBasicMaterial();
+            wireFrameMaterial.wireframe = true;
+
+            const mesh = THREE.SceneUtils.createMultiMaterialObject(hullGeometry, [chessTextureMaterial, wireFrameMaterial]);
 
             scene.add(mesh);
         });
 }
-
 
 $(function () {
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = createRenderer();
 
-    // setupFloor(scene);
     setupLight(scene);
     // createHelperAxis(scene);
 
