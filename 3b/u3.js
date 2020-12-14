@@ -136,17 +136,19 @@ function drawBishop(scene) {
     return bishop;
 }
 
-function drawBoard(scene) {
+async function drawBoard(scene) {
     const loader = new THREE.TextureLoader();
-    loader.crossOrigin = '';
-    loader.load(
-        'https://i.imgur.com/LsAGXuS.png',
-        async function (chessBoardTexture) {
-            drawChessBoard(scene, chessBoardTexture);
-            const bishop = drawBishop(scene);
-            await goToCellOnBoard('A', 1, bishop);
-            initializeControls('A', 1, bishop);
-        });
+    const promise = new Promise((resolve, reject) => {
+        loader.load(
+            'https://i.imgur.com/LsAGXuS.png',
+            async function (chessBoardTexture) {
+                drawChessBoard(scene, chessBoardTexture);
+                const bishop = drawBishop(scene);
+                resolve(bishop);
+            });
+    });
+
+    return promise;
 }
 
 function initializeControls(bishopStartingPositionLetter, bishopStartingPositionNumber, bishop) {
@@ -169,24 +171,23 @@ function initializeControls(bishopStartingPositionLetter, bishopStartingPosition
     gui.add(funcHolder, 'move').name('Move');
 }
 
-$(function () {
+async function init() {
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = createRenderer();
 
-
-
-    createHelperAxis(scene);
-    setupLight(scene);
-    drawBoard(scene);
-
-
+    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.x = -10;
     camera.position.y = 20;
     camera.position.z = 35;
     camera.lookAt(scene.position);
 
-    // add the output of the renderer to the html element
+    createHelperAxis(scene);
+    setupLight(scene);
+
+    const bishop = await drawBoard(scene);
+    goToCellOnBoard('A', 1, bishop);
+    initializeControls('A', 1, bishop);
+
     $("#WebGL-output").append(renderer.domElement);
     var controls = new THREE.TrackballControls(camera, renderer.domElement);
     render();
@@ -196,4 +197,6 @@ $(function () {
         requestAnimationFrame(render);
         controls.update();
     }
-});
+}
+
+init();
