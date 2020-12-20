@@ -1,10 +1,21 @@
-function sleep(ms) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve();
-        }, ms);
-    });
+const boardLetters = 'ABCDEFGH';
+const boardEdgeSize = 80;
+const cellEdgeSize = 9.2;
+const animationStepCount = 100;
+
+var scene, camera, renderer, controls, bishop, dot, line, line2, line3, line4, line5, nearPlane;
+var wireframeLines = [];
+var parameters = {
+    camera1_fov: 45,
+    camera2_fov: 45,
+    camera2_distance: 5,
+    camera2_showWireframe: false,
+    moveToLetter: 'D',
+    moveToNumber: 4,
+    cameraNumber: 2,
 }
+
+const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
 
 const bishopPoints = [
     new THREE.Vector2(0, 8.38),
@@ -50,12 +61,13 @@ const bishopPoints = [
     new THREE.Vector2(0, 0)
 ];
 
-const boardLetters = 'ABCDEFGH';
-const boardEdgeSize = 80;
-const cellEdgeSize = 9.2;
-const animationStepCount = 100;
-
-var scene, camera, renderer, controls;
+function sleep(ms) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, ms);
+    });
+}
 
 function createRenderer() {
     var renderer = new THREE.WebGLRenderer();
@@ -97,8 +109,6 @@ function drawChessBoard(scene, chessBoardTexture) {
 }
 
 async function goToCellOnBoard(letter, number, bishop) {
-    console.error('bishop starting coordinates', bishop.position.x, bishop.position.z);
-
     const letterIndex = boardLetters.indexOf(letter.toUpperCase());
     if (letterIndex == -1) {
         alert('Invalid board letter');
@@ -133,7 +143,7 @@ function drawBishop(scene) {
     const bishopMaterial = new THREE.MeshBasicMaterial({ color: 0x2446ab });
     const bishop = new THREE.Mesh(latheGeometry, bishopMaterial);
     bishop.position.y = 0.05;
-    bishop.position.x = boardEdgeSize / 8 / 2;
+    // bishop.position.x = boardEdgeSize / 8 / 2;
     scene.add(bishop);
     return bishop;
 }
@@ -153,64 +163,172 @@ async function drawBoard(scene) {
     return promise;
 }
 
-function doDollyZoom(camera, bishop) {
-    // camera.position.x = 0;
-    // camera.position.y = 10;
-    // camera.position.z = 60;
-    camera.lookAt(bishop.position);
-    console.error(bishop.position);
-    // this.cameraPosition = 3;
-}
+function initializeControls(bishop, camera) {
+    const funcHolder = {
+        move: () => goToCellOnBoard(parameters.moveToLetter, parameters.moveToNumber, bishop)
+    };
 
-function initializeControls(bishopStartingPositionLetter, bishopStartingPositionNumber, bishop, camera) {
     const gui = new dat.GUI();
-    const parameters = {
-        moveToLetter: bishopStartingPositionLetter,
-        moveToNumber: bishopStartingPositionNumber
-    }
+    gui.add(parameters, 'cameraNumber', 1, 3)
+        .step(1)
+        .name('Camera number');
 
-    gui.add(parameters, 'moveToLetter')
+    const bishopControls = gui.addFolder('Bishop controls');
+    bishopControls.add(funcHolder, 'move').name('Move');
+    bishopControls.add(parameters, 'moveToLetter')
         .name('Move to letter');
-    gui.add(parameters, 'moveToNumber', 1, 8)
+    bishopControls.add(parameters, 'moveToNumber', 1, 8)
         .step(1)
         .name('Move to number');
 
-    const funcHolder = {
-        move: () => goToCellOnBoard(parameters.moveToLetter, parameters.moveToNumber, bishop),
-        dollyZoom: () => doDollyZoom(camera, bishop)
-    };
-    gui.add(funcHolder, 'move').name('Move');
-    gui.add(funcHolder, 'dollyZoom').name('Dolly zoom');
+    const camera1Controls = gui.addFolder('Camera 1 controls');
+    camera1Controls.add(parameters, 'camera1_fov', 1, 179)
+        .step(1)
+        .name('Camera 1 FOV angle');
+
+    const camera2Controls = gui.addFolder('Camera 2 controls');
+    camera2Controls.add(parameters, 'camera2_distance', 5, 300)
+        .name('Camera 2 distance');
+    camera2Controls.add(parameters, 'camera2_showWireframe')
+        .name('Show wireframe');
+}
+
+function addDot(x, y, z) {
+    const boxGeometry = new THREE.SphereGeometry(0.2);
+    const boxMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+    const box = new THREE.Mesh(boxGeometry, boxMaterial);
+    box.position.x = x;
+    box.position.y = y;
+    box.position.z = z;
+    box.material.transparent = false;
+    box.visible = true;
+    scene.add(box);
+    return box;
+}
+function degreesToRadians(degrees) {
+    return degrees * (Math.PI / 180);
 }
 
 function render() {
+    if (parameters.cameraNumber == 1) {
+        camera.position.x = 0;
+        camera.position.y = 60;
+        camera.position.z = 105;
+        camera.fov = parameters.camera1_fov;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        camera.updateProjectionMatrix();
+    }
+
+    if (parameters.cameraNumber == 2) {
+        const distance = parameters.camera2_distance;
+        const fov = 2 * Math.atan(boardEdgeSize / (2 * parameters.camera2_distance)) * (180 / Math.PI);
+
+        const camerax = 0;
+        const cameray = 20;
+
+        if (parameters.camera2_showWireframe) {
+            if (!dot) {
+                dot = addDot(camerax, cameray, distance);
+            }
+            dot.visible = true;
+
+            camera.position.x = 70;
+            camera.position.y = 20;
+            camera.position.z = -50;
+            camera.fov = 45;
+
+            dot.position.z = distance;
+            camera.lookAt(camerax, cameray, 30);
+            camera.updateProjectionMatrix();
+
+            for (var i = 0; i < wireframeLines.length; i++) {
+                scene.remove(wireframeLines[i]);
+            }
+
+            const cameraPoint = new THREE.Vector3(camerax, cameray, distance);
+            const lookAtVector = new THREE.Vector3(bishop.position.x, bishop.position.y, bishop.position.z);
+            lookAtVector.sub(cameraPoint);
+            lookAtVector.normalize();
+
+            const ratio = window.innerHeight / window.innerWidth;
+            const dist = Math.sqrt(Math.pow(distance, 2) + Math.pow(cameray, 2))
+            const calculatedX = dist * Math.tan(degreesToRadians(fov / 2));
+            const calculatedY = calculatedX * ratio;
+
+            const bottomLeftVector = new THREE.Vector3(calculatedX, -calculatedY, bishop.position.z);
+            bottomLeftVector.sub(cameraPoint);
+            bottomLeftVector.normalize();
+
+            const bottomRightVector = new THREE.Vector3(-calculatedX, -calculatedY, bishop.position.z);
+            bottomRightVector.sub(cameraPoint);
+            bottomRightVector.normalize();
+
+            const upperLeftVector = new THREE.Vector3(calculatedX, calculatedY, bishop.position.z);
+            upperLeftVector.sub(cameraPoint);
+            upperLeftVector.normalize();
+
+            const upperRightVector = new THREE.Vector3(-calculatedX, calculatedY, bishop.position.z);
+            upperRightVector.sub(cameraPoint);
+            upperRightVector.normalize();
+
+            wireframePoints = [
+                [cameraPoint, cameraPoint.clone().addScaledVector(lookAtVector, 100)],
+                [cameraPoint, cameraPoint.clone().addScaledVector(bottomLeftVector, 100)],
+                [cameraPoint, cameraPoint.clone().addScaledVector(bottomRightVector, 100)],
+                [cameraPoint, cameraPoint.clone().addScaledVector(upperLeftVector, 100)],
+                [cameraPoint, cameraPoint.clone().addScaledVector(upperRightVector, 100)],
+                [cameraPoint.clone().addScaledVector(bottomLeftVector, 5), cameraPoint.clone().addScaledVector(bottomRightVector, 5)],
+                [cameraPoint.clone().addScaledVector(bottomRightVector, 5), cameraPoint.clone().addScaledVector(upperRightVector, 5)],
+                [cameraPoint.clone().addScaledVector(upperRightVector, 5), cameraPoint.clone().addScaledVector(upperLeftVector, 5)],
+                [cameraPoint.clone().addScaledVector(upperLeftVector, 5), cameraPoint.clone().addScaledVector(bottomLeftVector, 5)],
+            ];
+
+            for (var i = 0; i < wireframePoints.length; i++) {
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(wireframePoints[i]);
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                scene.add(line);
+                wireframeLines.push(line);
+            }
+        } else {
+            if (dot) {
+                dot.visible = false;
+            }
+
+            for (var i = 0; i < wireframeLines.length; i++) {
+                scene.remove(wireframeLines[i]);
+            }
+
+            camera.position.x = camerax;
+            camera.position.y = cameray;
+            camera.position.z = distance;
+            camera.fov = fov;
+            camera.lookAt(bishop.position);
+            camera.updateProjectionMatrix();
+        }
+
+    }
+
     renderer.render(scene, camera);
     requestAnimationFrame(render);
-    controls.update();
 }
 
 async function init() {
     scene = new THREE.Scene();
-
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.x = -10;
-    camera.position.y = 20;
-    camera.position.z = 35;
-    camera.lookAt(scene.position);
+
 
     createHelperAxis(scene);
     setupLight(scene);
 
-    const bishop = await drawBoard(scene);
-    goToCellOnBoard('A', 1, bishop);
-    initializeControls('A', 1, bishop, camera);
+    bishop = await drawBoard(scene);
+    scene.updateMatrixWorld();
+    // await goToCellOnBoard(parameters.moveToLetter, parameters.moveToNumber, bishop);
+    initializeControls(bishop, camera);
+
 
     renderer = createRenderer();
     $("#WebGL-output").append(renderer.domElement);
-    controls = new THREE.TrackballControls(camera, renderer.domElement);
     render();
 }
-
-
 
 init();
