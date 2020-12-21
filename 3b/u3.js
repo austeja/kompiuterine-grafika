@@ -15,7 +15,7 @@ var parameters = {
     camera2_showWireframe: false,
     moveToLetter: 'D',
     moveToNumber: 4,
-    cameraNumber: 3,
+    cameraNumber: 1,
 }
 
 const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
@@ -108,6 +108,8 @@ function drawChessBoard(scene, chessBoardTexture) {
     const chessBoardMaterial = new THREE.MeshBasicMaterial({ map: chessBoardTexture, side: THREE.DoubleSide });
     const chessBoard = new THREE.Mesh(chessBoardGeometry, chessBoardMaterial);
     chessBoard.receiveShadow = true;
+    chessBoard.position.x = 4.3;
+    chessBoard.position.z = 4.3;
     chessBoard.rotation.x = -0.5 * Math.PI;
     scene.add(chessBoard);
 }
@@ -249,6 +251,12 @@ function render() {
         bishop.position.x = 0;
         bishop.position.z = 0;
         camera.up = new THREE.Vector3(0, 1, 0);
+        for (var i = 0; i < wireframeLines.length; i++) {
+            scene.remove(wireframeLines[i]);
+        }
+        if (dot) {
+            scene.remove(dot);
+        }
 
         camera.position.x = 0;
         camera.position.y = 60;
@@ -360,14 +368,14 @@ function render() {
 
 
             wireframePoints = [
-                [cameraPoint, cameraPoint.clone().addScaledVector(upVector, 10)],
-                [cameraPoint, cameraPoint.clone().addScaledVector(thirdVector, 10)],
+                // [cameraPoint, cameraPoint.clone().addScaledVector(upVector, 10)],
+                // [cameraPoint, cameraPoint.clone().addScaledVector(thirdVector, 10)],
                 // [cameraPoint, cameraPoint.clone().addScaledVector(temp, 200)],
                 [cameraPoint, cameraPoint.clone().addScaledVector(corner1, 200)],
                 [cameraPoint, cameraPoint.clone().addScaledVector(corner2, 200)],
                 [cameraPoint, cameraPoint.clone().addScaledVector(corner3, 200)],
                 [cameraPoint, cameraPoint.clone().addScaledVector(corner4, 200)],
-                [cameraPoint, cameraPoint.clone().addScaledVector(lookAtVector, 10)],
+                // [cameraPoint, cameraPoint.clone().addScaledVector(lookAtVector, 10)],
                 //[cameraPoint, cameraPoint.clone().addScaledVector(bottomLeftVector, 100)],
                 //[cameraPoint, cameraPoint.clone().addScaledVector(bottomRightVector, 100)],
                 //[cameraPoint, cameraPoint.clone().addScaledVector(upperLeftVector, 100)],
@@ -384,19 +392,10 @@ function render() {
 
             for (var i = 0; i < wireframePoints.length; i++) {
                 let line;
-                if (i <= 1) {
-                    let lineMaterial2 = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+                if (i <= 3) {
+                    let lineMaterial2 = new THREE.LineBasicMaterial({ color: 0xff0000 });
                     const lineGeometry = new THREE.BufferGeometry().setFromPoints(wireframePoints[i]);
                     line = new THREE.Line(lineGeometry, lineMaterial2);
-                }
-                else if (i == 2 || i == 3 || i == 4) {
-                    let lineMaterial3 = new THREE.LineBasicMaterial({ color: 0xff0000 });
-                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(wireframePoints[i]);
-                    line = new THREE.Line(lineGeometry, lineMaterial3);
-                } else if (i == 5) {
-                    let lineMaterial4 = new THREE.LineBasicMaterial({ color: 0xff00ff });
-                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(wireframePoints[i]);
-                    line = new THREE.Line(lineGeometry, lineMaterial4);
                 }
                 else {
                     const lineGeometry = new THREE.BufferGeometry().setFromPoints(wireframePoints[i]);
@@ -430,6 +429,12 @@ function render() {
         camera.position.y = 110;
         camera.position.z = 0;
         camera.fov = 45;
+        for (var i = 0; i < wireframeLines.length; i++) {
+            scene.remove(wireframeLines[i]);
+        }
+        if (dot) {
+            scene.remove(dot);
+        }
 
         if ((bishop.position.z > 0 && bishop.position.z <= cameraSwitchZone) || (bishop.position.z < 0 && bishop.position.z >= -cameraSwitchZone)) {
             camera.up = new THREE.Vector3(
@@ -455,7 +460,7 @@ async function init() {
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 
-    createHelperAxis(scene);
+    // createHelperAxis(scene);
     setupLight(scene);
 
     bishop = await drawBoard(scene);
